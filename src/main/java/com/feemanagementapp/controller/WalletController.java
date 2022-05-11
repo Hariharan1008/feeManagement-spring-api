@@ -1,41 +1,56 @@
 package com.feemanagementapp.controller;
 
+
 import java.sql.SQLException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-
-import com.feemanagementapp.dao.AddMoneyToWallet;
-import com.feemanagementapp.dao.WalletInsertionDao;
-import com.feemanagementapp.dao.WalletLoginValidationDao;
+import com.feemanagementapp.model.Message;
 import com.feemanagementapp.model.Wallet;
 import com.feemanagementapp.service.NotificationService;
 import com.feemanagementapp.service.PayFeesUsingWallet;
+import com.feemanagementapp.service.WalletService;
 
 @RestController
 public class WalletController {
 	
 	@Autowired
 	NotificationService notificationservice;
+	
+	@Autowired
+	WalletService walletService;
 
 	@GetMapping("wallet/addMoney")
-  public String addMoneyToWallet(@RequestParam("sessionMobile")long sessionMobile,@RequestParam("amount") long amount) throws ClassNotFoundException, SQLException
+  public ResponseEntity<?> addMoneyToWallet(@RequestParam("sessionMobile")long sessionMobile,@RequestParam("amount") long amount) throws ClassNotFoundException, SQLException
   {
-		AddMoneyToWallet add=new AddMoneyToWallet();
-		int completed=0;
-		completed = add.addMoney(sessionMobile, amount);
-		String message=amount+"rs "+"added successfully to your wallet";
-		if(completed==1)
-		{
-			notificationservice.notificationInserter(message, sessionMobile);
-		    return "money add Successfully";
-		}
-		else
-		{
-			return "money not added";
-		}
+	  try
+	  {
+		  int updated=walletService.updateMoneyToWallet(sessionMobile, amount);
+		  if(updated==1)
+		  {
+			  return new ResponseEntity<>(HttpStatus.OK);
+		  }
+		  else
+    	  {
+    		  Message message=new Message();
+  	    	  message.setMessage("cant process your request this time");
+    		  return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+    	  }
+    	  
+      }
+     catch(Exception e)
+     {
+    	Message message=new Message();
+    	message.setMessage(e.getMessage());
+    	return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+     }
+		
 		
   }
   @GetMapping("wallet/findFeesAndWalletBalnce")
@@ -45,44 +60,46 @@ public class WalletController {
 	  Wallet wallet=pay.findFeesAndWalletBalance(email, mobile);
 	  return wallet;
   }
-  @GetMapping("wallet/registration")
-  public String walletRegistration(@RequestParam("name") String name,@RequestParam("mobile") long mobile,@RequestParam("tpin") int tpin) throws ClassNotFoundException, SQLException
+  @PostMapping("wallet/registration")
+  public ResponseEntity<?> walletRegistration(@RequestBody Wallet wallet)
   {
-	    long balance=0;
-		Wallet wallet=new Wallet();
-		wallet.setName(name);
-		wallet.setMobile(mobile);
-		wallet.setBalance(balance);
-		wallet.setTpin(tpin);
-		wallet.setWalletPoints(10);
-		WalletInsertionDao insert=new WalletInsertionDao();
-		int completed=0;
-		String result="";
-		completed=insert.walletInsertion(wallet);
-		if(completed==0)
-		{
-			result="Creation failed";
-		}
-		else
-		{
-			result="Success";
-		}
-		return result;
+	    try
+	    {
+	    	WalletService walletService=new WalletService();
+	    	walletService.walletRegister(wallet);
+	    	return new ResponseEntity<>(HttpStatus.OK);
+	    }
+	    catch(Exception e)
+	    {
+	    	Message message=new Message();
+	    	message.setMessage(e.getMessage());
+	    	return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+	    	
+	    }
   }
-  @GetMapping("wallet/verification")
-  public String verifyTpin(@RequestParam("tpin") int tpin,@RequestParam("mobile") long mobile) throws ClassNotFoundException, SQLException
+  @PostMapping("wallet/verification")
+  public ResponseEntity<?> verifyTpin(@RequestBody Wallet wallet ) throws ClassNotFoundException, SQLException
   {
-	    WalletLoginValidationDao login=new WalletLoginValidationDao();
-		String message=null;
-		int valid=login.validateWalletlogin(mobile,tpin);
-		if(valid==1)
-		{
-			message="valid";
-		}
-		else
-		{
-			message="invalid";
-		}
-		return message;
+	    try {
+	    	  WalletService walletService=new WalletService();
+	    	  int verified=walletService.walletVerification(wallet.getMobile(), wallet.getTpin());
+	    	  if(verified==1)
+	    	  {
+	    		  return new ResponseEntity<>(HttpStatus.OK);
+	    	  }
+	    	  else
+	    	  {
+	    		  Message message=new Message();
+	  	    	  message.setMessage("invalid pin");
+	    		  return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+	    	  }
+	    	  
+	      }
+	    catch(Exception e)
+	    {
+	    	Message message=new Message();
+	    	message.setMessage(e.getMessage());
+	    	return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+	    }
   }
 }

@@ -1,4 +1,6 @@
 package com.feemanagementapp.controller;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -7,6 +9,8 @@ import com.feemanagementapp.dao.FeesStatusDao;
 import com.feemanagementapp.dao.FeesStructureDao;
 import com.feemanagementapp.dao.UpdateFeesStructureDao;
 import com.feemanagementapp.model.FeesStructure;
+import com.feemanagementapp.model.Message;
+import com.feemanagementapp.service.FeeService;
 import com.feemanagementapp.service.FeesStructureValidator;
 
 
@@ -29,10 +33,21 @@ public class FeesController {
 	
 	
 	@GetMapping("fees/feesStructure")
-	public FeesStructure getFeesStructure(@RequestParam("year") int year,@RequestParam("branch") String branch) throws Exception
+	public ResponseEntity<?> getFeesStructure(@RequestParam("year") int year,@RequestParam("branch") String branch) throws Exception
 	{
-		FeesStructure fees=FeesStructureDao.getFeesStructure(year,branch);
-		return fees;
+		try
+		{
+			FeeService feeService= new FeeService();
+			FeesStructure fee=feeService.getFeesStructure(year, branch);
+			return new ResponseEntity<>(fee,HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+		   return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			
+		}
 	}
 	
 	@GetMapping("fees/update/fees")

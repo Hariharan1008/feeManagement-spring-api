@@ -3,6 +3,8 @@ package com.feemanagementapp.controller;
 import java.sql.SQLException;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -15,10 +17,12 @@ import com.feemanagementapp.dao.TransactionDetailsUsingIdDao;
 import com.feemanagementapp.dao.WalletRepository;
 import com.feemanagementapp.dao.WalletTransactionRepository;
 import com.feemanagementapp.model.FundTransaction;
+import com.feemanagementapp.model.Message;
 import com.feemanagementapp.model.MyProductTransaction;
 import com.feemanagementapp.model.Tickets;
 import com.feemanagementapp.model.Transaction;
 import com.feemanagementapp.model.WalletTransaction;
+import com.feemanagementapp.service.FeeService;
 
 
 
@@ -53,17 +57,19 @@ public class TransactionController {
 	}
 	
 	@GetMapping("transaction/FeesTransactions")
-	public List<Transaction> getAllTransactionDetails(@RequestParam("sessionEmail") String email) throws ClassNotFoundException, SQLException
+	public ResponseEntity<?>  getAllTransactionDetails(@RequestParam("sessionEmail") String email) throws ClassNotFoundException, SQLException
 	{
-		List<Transaction> transactions=MyTransactionDetailsDao.findMyTransactionDetails(email);
-		System.out.println(email);
-		if(transactions!=null)
+		try
 		{
-		   return transactions;
+		   FeeService feeService=new FeeService();
+		    List<Transaction> transactions =feeService.getAllTransactions(email);
+		    return new ResponseEntity<>(transactions,HttpStatus.OK);
 		}
-		else
+		catch(Exception e)
 		{
-			return null;
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
 		}
 	}
 	

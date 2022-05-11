@@ -4,7 +4,7 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 
 public class LoginValidationUsingDatabase {
-	public static String loginValidator(String email,String password) throws Exception
+	public static int loginValidator(String email,String password) throws Exception
 	{
 		Connection connection ;
 	    PreparedStatement statement;
@@ -25,16 +25,16 @@ public class LoginValidationUsingDatabase {
 		}
 		if(mail==null)
 		{
-			return "fail";
+			throw new Exception("no records found");
 		}
 		else if(Password.equals(password))
 		{
 			
-			return mobile;
+			return 1;
 		}
 		else
 		{
-			return "Invalid credentials";
+			throw new Exception("Invalid credentials");
 		}
 	}
 

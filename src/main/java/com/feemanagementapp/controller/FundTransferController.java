@@ -3,6 +3,8 @@ package com.feemanagementapp.controller;
 import java.sql.SQLException;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -11,6 +13,8 @@ import com.feemanagementapp.dao.FindWalletBalanceDao;
 import com.feemanagementapp.dao.FindWalletUserUsingMobile;
 import com.feemanagementapp.dao.UpdateWalletDao;
 import com.feemanagementapp.model.FundTransfer;
+import com.feemanagementapp.model.Message;
+import com.feemanagementapp.service.FundTransferService;
 import com.feemanagementapp.service.NotificationService;
 import com.feemanagementapp.service.UpdateFundTransaction;
 
@@ -23,54 +27,59 @@ public class FundTransferController {
 	@Autowired
 	NotificationService notificationservice;
 	
+	@Autowired
+	FundTransferService fundTransferService;
+	
 	@GetMapping("fundTransfer/findUser")
-	public String findWalletUser(@RequestParam("receiverMobile") long receiverMobile) throws ClassNotFoundException, SQLException
+	public ResponseEntity<?> findWalletUser(@RequestParam("receiverMobile") long receiverMobile) throws ClassNotFoundException, SQLException
 	{
-		FindWalletUserUsingMobile findName=new FindWalletUserUsingMobile();
-	     String userName=null;
-	     userName = findName.findUser(receiverMobile);
-	     String user="";
-	      if(userName!=null)
-	      {
-		     user=userName;
-	      }
-	      else
-	      {
-	    	  user="no user found";
-	      }
-	      return user;
+		try {
+			FundTransferService fundTransferService=new FundTransferService();
+			String userName=fundTransferService.getUserName(receiverMobile);
+			if(userName!=null)
+			{
+				Message message=new Message();
+				message.setMessage(userName);
+				return new ResponseEntity<>(message,HttpStatus.OK);
+			}
+			else
+			{
+				Message message=new Message();
+				message.setMessage("cant process your request at this time");
+				return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			}		
+		}
+		catch(Exception e)
+		{
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+		}
 	}
 	@GetMapping("fundTransfer/updateAllTransactions")
-	public String UpdateAllTransactionDetails(@RequestParam("senderMobile") long senderMobile,@RequestParam("receiverMobile") long receiverMobile,@RequestParam("amount") long amount) throws ClassNotFoundException, SQLException
+	public ResponseEntity<?> UpdateAllTransactionDetails(@RequestParam("senderMobile") long senderMobile,@RequestParam("receiverMobile") long receiverMobile,@RequestParam("amount") long amount) throws ClassNotFoundException, SQLException
 	{
-		FindWalletBalanceDao findBalance=new FindWalletBalanceDao();
-	    String message="";
-	    long senderBalance=0;
-	    long receiverBalance=0;
-	    senderBalance=findBalance.findWalletBalance(senderMobile);
-	    receiverBalance=findBalance.findWalletBalance(receiverMobile);
-	    if(amount<=senderBalance)
+		try 
 		{
-			FundTransfer transfer=new FundTransfer();
-			transfer.setAmount(amount);
-			transfer.setSenderMobile(senderMobile);
-			transfer.setReceiverMobile(receiverMobile);
-			transfer.setSenderBalance(senderBalance);
-			transfer.setReceiverBalance(receiverBalance);
-			UpdateFundTransaction fund=new UpdateFundTransaction();
-			fund.updateWallet(transfer);
-			UpdateWalletDao points=new UpdateWalletDao();
-			points.updateWalletPoints(senderMobile,(int)amount);
-			String senderStatus=amount+"rs "+"sent successfully to"+" "+receiverMobile;
-			String receiverStatus=amount+"rs "+"received successfully "+senderMobile; 
-			notificationservice.notificationInserter(senderStatus,senderMobile);
-			notificationservice.notificationInserter(receiverStatus,receiverMobile);
-			message="completed";
+			int completed=fundTransferService.updateAllFundTransactions(senderMobile, receiverMobile, amount);
+			if(completed==1)
+			{
+				return new ResponseEntity<>(HttpStatus.OK);
+			}
+			else
+			{
+				Message message=new Message();
+				message.setMessage("cant process your request at this time");
+				return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			}		
 		}
-		else
+		catch(Exception e)
 		{
-			message="Insufficient funds";
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
 		}
-	    return message;
+	
+	        
 	}
 }

@@ -6,12 +6,15 @@ import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import com.feemanagementapp.dao.TicketUpdationDao;
 import com.feemanagementapp.dao.UserRepository;
+import com.feemanagementapp.model.Message;
 import com.feemanagementapp.model.Tickets;
 import com.feemanagementapp.service.NotificationService;
 import com.feemanagementapp.service.TicketInsertion;
@@ -31,25 +34,27 @@ public class TicketController {
  
 	
 	@GetMapping("ticket/insert")
-	public String insertTicket(@RequestParam("query") String query,@RequestParam("email") String email)
+	public ResponseEntity<?> insertTicket(@RequestParam("query") String query,@RequestParam("email") String email)
 	{
 		System.out.println(query);
 		if(query!=null && query.trim()!="" && query.trim()!=" ")
 		{
-			
-			int inserted=ticketInsertion.insertTicket(query, email);
-			if(inserted==1)
-			{
-				return "success";
+			try {
+				int inserted=ticketInsertion.insertTicket(query, email);
+				return new ResponseEntity<>(HttpStatus.OK);
 			}
-			else
+			catch(Exception e)
 			{
-				return "failed";
+				Message message = new Message();
+				message.setMessage(e.getMessage());
+				return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
 			}
 		}
 		else
 		{
-			return "ticket cannot be null";
+			Message message = new Message();
+			message.setMessage("query cannot be empty");
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
 		}
 	}
 	

@@ -19,12 +19,12 @@ public class RegisterValidationUsingDatabase {
 		while(rs.next())
 		{
 		 mail=rs.getString("user_Email");
-		 connection.close();
+		
 		}
 		if(mail!=null)
 		{
-			//throw new Exception("You are already an existing User!!!!,Please Login");
-			return 0;
+			throw new Exception("You are already an existing User!!!!,Please Login");
+			
 		}
 		else
 		{
@@ -51,8 +51,8 @@ public class RegisterValidationUsingDatabase {
 	    }
 	    if(mob!=null)
 	    {
-		   //throw new Exception("You are already an existing User!!!!,Please Login");
-	    	return 0;
+		   throw new Exception("You are already an existing User!!!!,Please Login");
+	    	
 	    }
 	   else
 	   {

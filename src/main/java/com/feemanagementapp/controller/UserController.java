@@ -5,7 +5,11 @@ import java.sql.SQLException;
 import java.time.LocalDate;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -14,9 +18,11 @@ import com.feemanagementapp.dao.RegisterInsertion;
 import com.feemanagementapp.dao.RegistrationInsertionAdminDao;
 import com.feemanagementapp.dao.UserRepository;
 import com.feemanagementapp.model.FeesStructure;
+import com.feemanagementapp.model.Message;
 import com.feemanagementapp.model.Registration;
 import com.feemanagementapp.model.Session;
 import com.feemanagementapp.service.RegisterValidator;
+import com.feemanagementapp.service.RegistrationService;
 import com.feemanagementapp.service.TotalFeesFinder;
 
 
@@ -25,6 +31,10 @@ import com.feemanagementapp.service.TotalFeesFinder;
 public class UserController {
 	@Autowired
 	UserRepository user;
+	
+	@Autowired
+	RegistrationService registerService; 
+	
 	@GetMapping("register/verification")
 	public String verifyUser(@RequestParam("name") String name,@RequestParam("userName") String userName,@RequestParam("mobile") String mobile,@RequestParam("email") String email,@RequestParam("password") String password,@RequestParam("age") String age) throws Exception
 	{
@@ -36,87 +46,53 @@ public class UserController {
 		registration.setAge(userAge);
 		registration.setUserEmail(email);
 		registration.setUserPassword(password);
-		String message;
-		int result=RegisterValidator.validatingRegistration(registration);
-		if(result==1)
-		{
-			message="successfull";
-		}
-		else
-		{
-			message="failure";
-		}
-		return message;
-	}
-	
-	@GetMapping("register/insertion")
-	public String insertUser(@RequestParam("name") String name,@RequestParam("userName") String userName,@RequestParam("mobile") String mobile,@RequestParam("email") String email,@RequestParam("password") String password,@RequestParam("age") String age,@RequestParam("year") int year,@RequestParam("branch") String branch,@RequestParam("hostelCheck") String hOrD,@RequestParam("bus") String needBus) throws Exception
-	{
-        Registration registration=new Registration();
-		registration.setName(name);
-		registration.setUserName(userName);
-		registration.setUserMobileNumber(mobile);
-		int userAge=Integer.parseInt(age);
-		registration.setAge(userAge);
-		registration.setUserEmail(email);
-		registration.setUserPassword(password);
-		registration.setYearOfStudy(year);
-		registration.setBranch(branch);
-		registration.sethOrD(hOrD);
-		registration.setNeedBus(needBus);
-//		int userInsert=0;
-//		userInsert = RegisterInsertion.insertUser(registration);
-		user.save(registration);
-		String totalFees=null;
-		totalFees = TotalFeesFinder.totalFeeFinder(year,branch,hOrD,needBus);
-		System.out.println(year+" "+branch+" "+hOrD+" "+needBus);
-		FeesStructure fee= new FeesStructure();
-		fee.setEmail(email);
-		fee.setName(name);
-		fee.setTotalFees(totalFees);
-		String paidFees=Integer.toString(0);
-		fee.setFeesPaid(paidFees);
-		fee.setFeesPending(totalFees);
-		fee.setPayingAmount(paidFees);
-		Date date =Date.valueOf(LocalDate.now());
-		fee.setPaidOn(date);
-		int adminInsert=0;
-		adminInsert=RegistrationInsertionAdminDao.userInsertionInAdminTable(fee);
-		String message;
-		if( adminInsert==1)
-		{
-			Session.setSessionmobile(mobile);
-			Session.setSessionEmail(email);
-			message="Successfully Inserted";
-		}
-		else
-		{
-			message="found an error";
-		}
-		return message;
-	}
-	
-	@GetMapping("user/login")
-	public String loginValidation(@RequestParam("email") String email,@RequestParam("password") String password) throws Exception
-	{
-        String valid=null;
-		valid=LoginValidationUsingDatabase.loginValidator(email,password);
 		String message=null;
-		if(valid.length()==10)
-		{
-			Session.setSessionEmail(email);
-			Session.setSessionmobile(valid);
-			message="Welcome";
-		}
-		else if(valid=="fail")
-		{
-			message= "no records found";
-		}
-		else
-		{
-			message ="invalid credentials";
-		}
+		try
+		{			 
+			int result=RegisterValidator.validatingRegistration(registration);		
+			  message="successfull";				
+		}		
+		 catch(Exception e)
+	    {
+	    	message=e.getMessage();
+	    }
 		return message;
+	}
+	
+	@PostMapping("register/insertion")
+	public ResponseEntity<?> insertUser(@RequestBody Registration registration) throws Exception
+	{
+		try
+		{
+		  
+		  int result=registerService.registerInsertion(registration);
+		  return new ResponseEntity<>(HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			
+		}
+	}
+	
+	@PostMapping("user/login")
+	public ResponseEntity<?> loginValidation(@RequestBody Registration registration) throws Exception
+	{
+        try
+        {
+		  LoginValidationUsingDatabase.loginValidator(registration.getUserEmail(),registration.getUserPassword());
+		  return new ResponseEntity<>(HttpStatus.OK);
+        }
+        catch(Exception e)
+        {
+        	Message message=new Message();
+        	message.setMessage(e.getMessage());
+        	return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+        }
+		
+		
 	}
 	@GetMapping("user/sessionMobile")
 	public long getSessionMobile(@RequestParam("email") String email)
@@ -144,6 +120,24 @@ public class UserController {
 	{
 		user.updatePassword(password, email);
 		return "success";
+	}
+	
+	@PostMapping("user/insert/admin")
+	public ResponseEntity<?> insertAdmin(@RequestBody Registration registration)
+	{
+		try
+		{
+		  user.save(registration);
+		  return new ResponseEntity<>(HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			
+		}
+		
 	}
 			
 

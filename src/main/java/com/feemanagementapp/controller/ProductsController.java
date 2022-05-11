@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.feemanagementapp.dao.GetAllProdutsDao;
 import com.feemanagementapp.dao.ProductRepository;
+import com.feemanagementapp.model.Message;
 import com.feemanagementapp.model.Products;
 import com.feemanagementapp.service.ProductValidator;
 import com.feemanagementapp.service.ProductsService;
@@ -50,19 +51,35 @@ public class ProductsController {
 	}
 	
 	@GetMapping("products/allProducts")
-	public List<Products> getAllProducts() throws ClassNotFoundException, SQLException
+	public ResponseEntity<?> getAllProducts() throws ClassNotFoundException, SQLException
 	{
-		List<Products> products=productRepository.findAll();
-		return products;
-		
-//		List<Products> products=GetAllProdutsDao.findAllProducts();
-//		return products;
+		try 
+		{
+			List<Products> products=productService.getAllProducts();
+			return new ResponseEntity<>(products,HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+		}
 	}
 	@GetMapping("products/get/product")
-	 public Products getProductUsingId(@RequestParam("id") int id)
+	 public ResponseEntity<?> getProductUsingId(@RequestParam("id") int id)
 	 {
-		  Products product=productRepository.getProductById(id);
-		  return product;
+		try {
+		    Products product=productRepository.getProductById(id);
+		    return new ResponseEntity<>(product,HttpStatus.OK);
+		}
+		catch(Exception e)
+		{
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			System.out.println(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			
+		}
 	 }
 	
 	@GetMapping("products/get/brand")
