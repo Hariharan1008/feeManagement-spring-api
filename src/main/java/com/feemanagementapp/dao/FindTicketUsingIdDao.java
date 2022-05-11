@@ -14,25 +14,26 @@ import com.feemanagementapp.model.Tickets;
 
 
 public class FindTicketUsingIdDao {
-	public static Tickets usingTicketId(int ticketId) throws ClassNotFoundException, SQLException
+	public static Tickets usingTicketId(int ticketId,String email) throws ClassNotFoundException, SQLException
 	{
 		Connection connection=ConnectionUtil.databaseConnection();
 		PreparedStatement statement=null;
-		String qurey="SELECT * FROM Tickets WHERE ticket_Id=?";
+		String qurey="SELECT * FROM tickets WHERE ticket_Id=? and Email=?";
 		statement=connection.prepareStatement(qurey);
 		statement.setInt(1, ticketId);
+		statement.setString(2, email);
 		ResultSet result=statement.executeQuery();
-		int ticketIn=0;
+		
 		String myQuery=null;
 		Date date=null;
 		Tickets ticket=null;
 		String ticketStatus=null;
-		String name=null;
+		
 		if(result.next())
 		{
 			ticket=new Tickets();
 			ticketId=result.getInt("Ticket_Id");
-			//name=result.getString("Name");
+			
 			myQuery=result.getString("Queries");
 			date=result.getDate("Created_On");
 			ticketStatus=result.getString("Ticket_Status");

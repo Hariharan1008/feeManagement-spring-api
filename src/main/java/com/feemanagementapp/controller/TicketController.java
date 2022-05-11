@@ -17,12 +17,12 @@ import com.feemanagementapp.dao.UserRepository;
 import com.feemanagementapp.model.Message;
 import com.feemanagementapp.model.Tickets;
 import com.feemanagementapp.service.NotificationService;
-import com.feemanagementapp.service.TicketInsertion;
+import com.feemanagementapp.service.TicketService;
 
 @RestController
 public class TicketController {
  @Autowired
- TicketInsertion ticketInsertion; 
+ TicketService ticketInsertion; 
  
  @Autowired
  NotificationService notificationService;

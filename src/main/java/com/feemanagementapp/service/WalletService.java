@@ -1,6 +1,7 @@
 package com.feemanagementapp.service;
 
 import java.sql.SQLException;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -8,12 +9,17 @@ import org.springframework.stereotype.Component;
 import com.feemanagementapp.dao.AddMoneyToWallet;
 import com.feemanagementapp.dao.WalletInsertionDao;
 import com.feemanagementapp.dao.WalletLoginValidationDao;
+import com.feemanagementapp.dao.WalletTransactionRepository;
 import com.feemanagementapp.model.Wallet;
+import com.feemanagementapp.model.WalletTransaction;
 
 @Component
 public class WalletService {
 	@Autowired
 	NotificationService notificationService;
+	
+	@Autowired
+	WalletTransactionRepository walletTransactionRepository;
 
 	public String walletRegister(Wallet wallet) throws ClassNotFoundException, SQLException
 	{
@@ -86,6 +92,19 @@ public class WalletService {
 			
 		}
 		
+	}
+	
+	public List<WalletTransaction> getAllWalletTransactions(long mobile) throws Exception
+	{
+		List<WalletTransaction> transactions=walletTransactionRepository.getAllWalletTransactions(mobile);
+		if(transactions!=null)
+		{
+			return transactions;
+		}
+		else
+		{
+			throw new Exception("no records found");
+		}
 	}
 
 }

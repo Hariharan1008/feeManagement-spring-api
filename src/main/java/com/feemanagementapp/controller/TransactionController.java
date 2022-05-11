@@ -23,37 +23,76 @@ import com.feemanagementapp.model.Tickets;
 import com.feemanagementapp.model.Transaction;
 import com.feemanagementapp.model.WalletTransaction;
 import com.feemanagementapp.service.FeeService;
+import com.feemanagementapp.service.TicketService;
+import com.feemanagementapp.service.WalletService;
 
 
 
 @RestController
 public class TransactionController {
+	@Autowired
+	TicketService ticketService;
 	
 	@Autowired
 	WalletRepository wallet;
 	
 	@Autowired
-	WalletTransactionRepository walletTransactionRepository; 
+	WalletTransactionRepository walletTransactionRepository;
+	
+	@Autowired
+	FeeService feeService;
+	
+	@Autowired
+	WalletService walletService;
 	
 	@GetMapping("transaction/allTickets")
-	public List<Tickets> getAllTickets(@RequestParam("email") String email) throws ClassNotFoundException, SQLException
+	public ResponseEntity<?> getAllTickets(@RequestParam("email") String email) throws ClassNotFoundException, SQLException
 	{
-		List<Tickets> list=MyTicketDetailsDao.findAllTickets(email);
-		if(list!=null)
+		try
 		{
-		   return list;
+			List<Tickets> tickets=ticketService.getAllTickets(email);
+			if(tickets!=null)
+			{
+				return new ResponseEntity<>(tickets,HttpStatus.OK);
+			}
+			else
+			{
+				Message message=new Message();
+				message.setMessage("cant process your request at this time");
+				return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			}
 		}
-		else
+		catch(Exception e)
 		{
-			return null;
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
 		}
 	}
 	
-	@GetMapping("transaction/ticket/{id}")
-	public Tickets findTicketUsingId(@PathVariable("ticketId") int ticketId) throws ClassNotFoundException, SQLException
+	@GetMapping("transaction/ticket/usingid")
+	public ResponseEntity<?> findTicketUsingId(@RequestParam("ticketId") int ticketId,@RequestParam("email") String email) throws ClassNotFoundException, SQLException
 	{
-		Tickets ticket=FindTicketUsingIdDao.usingTicketId(ticketId);
-		return ticket;
+		try
+		{
+			Tickets ticket=ticketService.getTicketUsingId(ticketId, email);
+			if(ticket!=null)
+			{
+				return new ResponseEntity<>(ticket,HttpStatus.OK);
+			}
+			else
+			{
+				Message message=new Message();
+				message.setMessage("cant process your request at this time");
+				return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			}
+		}
+		catch(Exception e)
+		{
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+		}
 	}
 	
 	@GetMapping("transaction/FeesTransactions")
@@ -74,18 +113,18 @@ public class TransactionController {
 	}
 	
 	@GetMapping("transaction/feestransaction/id")
-	public Transaction getTransactionDetailsUsingId(@RequestParam("transactionId") int transactionId,@RequestParam("email") String email) throws ClassNotFoundException, SQLException
+	public ResponseEntity<?> getTransactionDetailsUsingId(@RequestParam("transactionId") int transactionId,@RequestParam("email") String email) throws ClassNotFoundException, SQLException
 	{
-		Transaction transaction=TransactionDetailsUsingIdDao.usingTransactionId(transactionId,email);
-//		if(transaction!=null)
-//		{
-//		  return transaction;
-//		}
-//		else
-//		{
-//			return null;
-//		}
-		return transaction;
+	   try {
+		    Transaction transaction=feeService.getTransactionUsingId(transactionId, email);
+		    return new ResponseEntity<>(transaction,HttpStatus.OK);
+	   }
+	   catch(Exception e)
+		{
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+		}
 		
 	}
 	
@@ -119,18 +158,30 @@ public class TransactionController {
 		}
 	}
 	@GetMapping("transaction/wallet/allTransactions")
-	public List<WalletTransaction> getAllWalletTransactions(@RequestParam("mobile") long mobile) throws ClassNotFoundException, SQLException
+	public ResponseEntity<?> getAllWalletTransactions(@RequestParam("mobile") long mobile) throws ClassNotFoundException, SQLException
 	{
 		
-		List<WalletTransaction> transactions=walletTransactionRepository.getAllWalletTransactions(mobile);
-		if(transactions!=null)
+		try
 		{
-			return transactions;
+			List<WalletTransaction> transactions=walletService.getAllWalletTransactions(mobile);
+			if(transactions!=null)
+			{
+				return new ResponseEntity<>(transactions,HttpStatus.OK);
+			}
+			else
+			{
+				Message message=new Message();
+				message.setMessage("cant process your request at this time");
+				return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
+			}
 		}
-		else
+		catch(Exception e)
 		{
-			return null;
+			Message message=new Message();
+			message.setMessage(e.getMessage());
+			return new ResponseEntity<>(message,HttpStatus.BAD_REQUEST);
 		}
+		
 	}
 	
 
