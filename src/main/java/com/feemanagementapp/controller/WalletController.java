@@ -27,8 +27,8 @@ public class WalletController {
 	WalletService walletService;
 
 	@GetMapping("wallet/addMoney")
-  public ResponseEntity<?> addMoneyToWallet(@RequestParam("sessionMobile")long sessionMobile,@RequestParam("amount") long amount) throws ClassNotFoundException, SQLException
-  {
+    public ResponseEntity<?> addMoneyToWallet(@RequestParam("sessionMobile")long sessionMobile,@RequestParam("amount") long amount) throws ClassNotFoundException, SQLException
+    {
 	  try
 	  {
 		  int updated=walletService.updateMoneyToWallet(sessionMobile, amount);

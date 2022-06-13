@@ -7,6 +7,7 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
 
+
 import com.feemanagementapp.model.Products;
 
 public class GetAllProdutsDao {
@@ -37,7 +38,7 @@ public class GetAllProdutsDao {
 			product.setImageUrl(imageUrl);
 			product.setPrice(price);
 			product.setId(id);
-			product.setWalletpoints(walletPoints);
+			product.setWalletPoints(walletPoints);
 			list.add(product);
 		}
 		connection.close();

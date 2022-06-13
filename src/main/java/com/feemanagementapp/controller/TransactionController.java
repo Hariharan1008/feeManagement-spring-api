@@ -95,7 +95,7 @@ public class TransactionController {
 		}
 	}
 	
-	@GetMapping("transaction/FeesTransactions")
+	@GetMapping("transaction/feestransactions")
 	public ResponseEntity<?>  getAllTransactionDetails(@RequestParam("sessionEmail") String email) throws ClassNotFoundException, SQLException
 	{
 		try

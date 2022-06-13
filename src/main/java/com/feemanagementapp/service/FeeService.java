@@ -1,6 +1,5 @@
 package com.feemanagementapp.service;
 
-import java.sql.SQLException;
 import java.util.List;
 
 import org.springframework.stereotype.Component;
@@ -30,9 +29,10 @@ public class FeeService {
 	public List<Transaction> getAllTransactions(String email) throws Exception
 	{
 		List<Transaction> transactions=MyTransactionDetailsDao.findMyTransactionDetails(email);
-		System.out.println(email);
-		if(transactions!=null)
+		//System.out.println(email);
+		if(transactions.size()>0)
 		{
+		   System.out.println(transactions.size());
 		   return transactions;
 		}
 		else
